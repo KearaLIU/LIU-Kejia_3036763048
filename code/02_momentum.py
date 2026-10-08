@@ -93,19 +93,23 @@ def decile_ranks(mom: np.ndarray, n_deciles: int = N_DECILES) -> np.ndarray:
 
 
 def overlapping_decile_returns(R: np.ndarray, D: np.ndarray, K: int,
-                               n_deciles: int = N_DECILES) -> np.ndarray:
+                               n_deciles: int = N_DECILES,
+                               skip: int = 0) -> np.ndarray:
     """Overlapping equal-weighted decile return series, shape (n_deciles, T).
 
     ret[d, m] = mean over h in 1..K of the month-m return of the portfolio that
-    was formed in month m-h (where available).
+    was formed in month m - (h + skip). ``skip`` inserts that many idle months
+    between the end of the formation period and the start of the holding period
+    (skip=1 reproduces the paper's Table 3 one-week lag at monthly frequency).
     """
     T, S = R.shape
     ret_sum = np.zeros((n_deciles, T))
     ret_cnt = np.zeros((n_deciles, T))
     for h in range(1, K + 1):
+        lag = h + skip
         D_shift = np.full((T, S), np.nan)
-        D_shift[h:] = D[: T - h]
-        for m in range(h, T):
+        D_shift[lag:] = D[: T - lag]
+        for m in range(lag, T):
             g = D_shift[m]
             valid = ~np.isnan(g)
             if not valid.any():
@@ -139,14 +143,15 @@ def newey_west_tstat(x, lags: int) -> float:
     return float(x.mean() / se) if se > 0 else np.nan
 
 
-def build_decile_table(R: np.ndarray, months: np.ndarray) -> pd.DataFrame:
+def build_decile_table(R: np.ndarray, months: np.ndarray,
+                       skip: int = 0) -> pd.DataFrame:
     """Compute the tidy decile return series for every (J, K)."""
     frames = []
     for J in config.J_VALUES:
         mom = past_return(R, J)
         D = decile_ranks(mom)
         for K in config.K_VALUES:
-            ret = overlapping_decile_returns(R, D, K)
+            ret = overlapping_decile_returns(R, D, K, skip=skip)
             for d in range(N_DECILES):
                 series = ret[d]
                 valid = np.isfinite(series)
