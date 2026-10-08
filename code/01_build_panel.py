@@ -16,7 +16,7 @@ Notes:
     robustness consideration.
   - MthCap appears to be in thousands of dollars (ShrOut[thousand] x price).
 
-Output: data/monthly_panel.parquet (long panel: PERMNO, MthCalDt, MthRet, MthCap)
+Output: data/monthly_panel.parquet (long panel: PERMNO, MthCalDt, MthRet, MthCap, PrimaryExch)
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def main() -> None:
         n_share += len(chunk)
         chunk = chunk[chunk["MthRet"].notna()]
         n_ret += len(chunk)
-        chunks.append(chunk[["PERMNO", "MthCalDt", "MthRet", "MthCap"]])
+        chunks.append(chunk[["PERMNO", "MthCalDt", "MthRet", "MthCap", "PrimaryExch"]])
 
     panel = pd.concat(chunks, ignore_index=True)
     panel = panel.sort_values(["PERMNO", "MthCalDt"]).reset_index(drop=True)
