@@ -39,13 +39,13 @@ ECON6067/
 └── report/                # empirical report (tracked)
 ```
 
-`test.ipynb` is a local interactive walkthrough with Chinese comments; it is gitignored
-and not part of the submission.
+## Data prerequisites
 
-## Raw data (NOT in this repository)
-
-Restricted CRSP data is **not** committed. It lives in a sibling folder, one level up
-from this repo:
+The final results are already committed in `output/` (tables and figures), so the
+reported numbers can be verified without any data. To **re-run** the pipeline from
+scratch you need the restricted CRSP source files, which are licensed and therefore not
+distributed in this repository. Download them from WRDS and place them one level above
+the repo (or point `RAW_DATA_DIR` at them):
 
 ```
 ../raw data/
@@ -56,13 +56,9 @@ from this repo:
     └── daily_stock.csv            # daily CRSP stock file (PERMNO, DlyRet, DlyCap, …)
 ```
 
-The path is configured in `config.py` (`RAW_DATA_DIR`, default `../raw data`). To run the
-workflow on a different machine:
-
-1. Clone this repository.
-2. Place the downloaded `02_Monthly_Stocks_and_Factors/` and `03_Daily_Stocks/` folders
-   in a `raw data/` folder next to the repo **or** set the environment variable
-   `RAW_DATA_DIR` to the folder that contains them.
+Only `monthly_stock.csv` is required for the tables and figures; the daily file and the
+Fama-French factors are used only by the profiling step (`00_profile_data.py`). The
+location is configured in `config.py` via `RAW_DATA_DIR` (default `../raw data`).
 
 ## Environment
 
