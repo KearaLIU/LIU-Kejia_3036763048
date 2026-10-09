@@ -5,7 +5,7 @@ the reference data-viz palette (see the project's design notes): categorical
 slots are fixed-order blue/orange, ordinal and sequential magnitudes use a
 single blue ramp (light -> dark), and ink/grid are the muted chart tokens.
 
-Figures (all written to output/):
+Figures (all written to outputs/figures/):
   fig1_decile_returns.png       -- decile portfolio means (Table 1), ordinal ramp
   fig2_jk_heatmap.png           -- winner-minus-loser J x K grid (Table 2)
   fig3_cumulative_wml.png       -- cumulative P10-P1 wealth (J=6, K=6)
@@ -76,8 +76,8 @@ def _deciles_only(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # --- Figure 1: decile portfolios ----------------------------------------------
-def fig1(out: Path):
-    df = pd.read_csv(out / "table1_deciles.csv")
+def fig1(tables: Path, figs: Path):
+    df = pd.read_csv(tables / "table1_deciles.csv")
     dec = _deciles_only(df)
     wml = df[df["decile"] == "P10-P1"].iloc[0]["mean_ret_pct"]
 
@@ -100,13 +100,13 @@ def fig1(out: Path):
     ax.text(0.02, 0.97, f"P10 $-$ P1 = {wml:.2f}%/mo", transform=ax.transAxes,
             ha="left", va="top", fontsize=10, color=INK)
     fig.tight_layout()
-    fig.savefig(out / "fig1_decile_returns.png")
+    fig.savefig(figs / "fig1_decile_returns.png")
     plt.close(fig)
 
 
 # --- Figure 2: J x K heatmap --------------------------------------------------
-def fig2(out: Path):
-    df = pd.read_csv(out / "table2_jk.csv")
+def fig2(tables: Path, figs: Path):
+    df = pd.read_csv(tables / "table2_jk.csv")
     pivot = df.pivot(index="J", columns="K", values="p10_minus_p1_mean_pct")
 
     fig, ax = plt.subplots(figsize=(5.6, 4.6), dpi=200)
@@ -127,12 +127,12 @@ def fig2(out: Path):
                     color=("white" if v > mid else INK), fontsize=9)
     fig.colorbar(im, ax=ax, label="%/mo", fraction=0.046, pad=0.04)
     fig.tight_layout()
-    fig.savefig(out / "fig2_jk_heatmap.png")
+    fig.savefig(figs / "fig2_jk_heatmap.png")
     plt.close(fig)
 
 
 # --- Figure 3: cumulative winner-minus-loser ----------------------------------
-def fig3(data: Path, out: Path):
+def fig3(data: Path, figs: Path):
     dec = pd.read_parquet(data / "momentum_deciles.parquet")
     sub = dec[(dec["J"] == 6) & (dec["K"] == 6)]
     wide = sub.pivot(index="month", columns="decile", values="ret").sort_index()
@@ -160,14 +160,14 @@ def fig3(data: Path, out: Path):
              "(Jan 2001 dot-com, 2009 GFC).",
              ha="right", va="bottom", fontsize=8, color=MUTED)
     fig.tight_layout(rect=[0, 0.04, 1, 1])
-    fig.savefig(out / "fig3_cumulative_wml.png")
+    fig.savefig(figs / "fig3_cumulative_wml.png")
     plt.close(fig)
 
 
 # --- Figure 4: size comparison (equal-count vs NYSE) --------------------------
-def fig4(out: Path):
-    t4 = pd.read_csv(out / "table4_size_deciles.csv")
-    t5 = pd.read_csv(out / "table5_size_deciles.csv")
+def fig4(tables: Path, figs: Path):
+    t4 = pd.read_csv(tables / "table4_size_deciles.csv")
+    t5 = pd.read_csv(tables / "table5_size_deciles.csv")
     sizes = ["Small", "Mid", "Large"]
     x = np.arange(len(sizes))
     w = 0.38
@@ -191,14 +191,14 @@ def fig4(out: Path):
                     f"{b.get_height():.2f}", ha="center", va="bottom",
                     fontsize=8.5, color=SEC_INK)
     fig.tight_layout()
-    fig.savefig(out / "fig4_size_momentum.png")
+    fig.savefig(figs / "fig4_size_momentum.png")
     plt.close(fig)
 
 
 # --- Figure 5: skip-month comparison (Table 1 vs Table 3) ---------------------
-def fig5(out: Path):
-    t1 = pd.read_csv(out / "table1_deciles.csv")
-    t3 = pd.read_csv(out / "table3_deciles.csv")
+def fig5(tables: Path, figs: Path):
+    t1 = pd.read_csv(tables / "table1_deciles.csv")
+    t3 = pd.read_csv(tables / "table3_deciles.csv")
     d1 = _deciles_only(t1)
     d3 = _deciles_only(t3)
     x = np.arange(len(d1))
@@ -215,21 +215,22 @@ def fig5(out: Path):
     ax.set_title("Momentum deciles with and without a one-month skip")
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out / "fig5_skip_comparison.png")
+    fig.savefig(figs / "fig5_skip_comparison.png")
     plt.close(fig)
 
 
 def main() -> None:
     config.ensure_dirs()
-    out = config.OUTPUT_DIR
+    tables = config.TABLES_DIR
+    figs = config.FIGURES_DIR
     data = config.DATA_DIR
-    fig1(out)
-    fig2(out)
-    fig3(data, out)
-    fig4(out)
-    fig5(out)
+    fig1(tables, figs)
+    fig2(tables, figs)
+    fig3(data, figs)
+    fig4(tables, figs)
+    fig5(tables, figs)
     print("wrote:")
-    for p in sorted(out.glob("fig*.png")):
+    for p in sorted(figs.glob("fig*.png")):
         print(f"  {p.name}")
 
 

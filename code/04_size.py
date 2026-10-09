@@ -11,9 +11,9 @@ month, so a portfolio's size membership is fixed at formation (consistent with
 the overlapping-portfolio convention used in Steps 02-03).
 
 Outputs:
-  data/momentum_by_size.parquet  -- tidy (size, month, J, K, decile, ret)
-  output/table4_size_deciles.csv -- J=6,K=6 WML by size group (Table 4a)
-  output/table4_size_jk.csv      -- J x K WML for Small and Large (Table 4b)
+  data/processed/momentum_by_size.parquet  -- tidy (size, month, J, K, decile, ret)
+  outputs/tables/table4_size_deciles.csv -- J=6,K=6 WML by size group (Table 4a)
+  outputs/tables/table4_size_jk.csv      -- J x K WML for Small and Large (Table 4b)
 """
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def main() -> None:
             "n_months": len(wml),
         })
     t4a = pd.DataFrame(rows)
-    t4a.to_csv(config.OUTPUT_DIR / "table4_size_deciles.csv", index=False)
+    t4a.to_csv(config.TABLES_DIR / "table4_size_deciles.csv", index=False)
     print("Table 4a - winner-minus-loser (P10-P1) mean monthly return, %, "
           "J=6, K=6, by size tercile:\n")
     print(t4a.round(3).to_string(index=False))
@@ -139,7 +139,7 @@ def main() -> None:
         t["size"] = label
         frames.append(t)
     t4b = pd.concat(frames, ignore_index=True)
-    t4b.to_csv(config.OUTPUT_DIR / "table4_size_jk.csv", index=False)
+    t4b.to_csv(config.TABLES_DIR / "table4_size_jk.csv", index=False)
 
     for label in ("Small", "Large"):
         sub = t4b[t4b["size"] == label]
@@ -148,8 +148,8 @@ def main() -> None:
         print(pivot.round(3).to_string())
         print()
 
-    print("wrote data/momentum_by_size.parquet, "
-          "output/table4_size_deciles.csv, output/table4_size_jk.csv")
+    print("wrote data/processed/momentum_by_size.parquet, "
+          "outputs/tables/table4_size_deciles.csv, outputs/tables/table4_size_jk.csv")
 
 
 if __name__ == "__main__":

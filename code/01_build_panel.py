@@ -16,7 +16,7 @@ Notes:
     robustness consideration.
   - MthCap appears to be in thousands of dollars (ShrOut[thousand] x price).
 
-Output: data/monthly_panel.parquet (long panel: PERMNO, MthCalDt, MthRet, MthCap, PrimaryExch)
+Output: data/processed/monthly_panel.parquet (long panel: PERMNO, MthCalDt, MthRet, MthCap, PrimaryExch)
 """
 from __future__ import annotations
 
@@ -35,6 +35,10 @@ EXCHANGES = {"N", "A", "Q"}  # NYSE, AMEX, NASDAQ
 
 def main() -> None:
     config.ensure_dirs()
+    out = config.DATA_DIR / "monthly_panel.parquet"
+    if out.exists():
+        print(f"skipping: {out} already exists (delete it to rebuild)")
+        return
     n_in = n_exch = n_eqty = n_share = n_ret = 0
     chunks = []
 
@@ -70,7 +74,6 @@ def main() -> None:
     print(f"months                   : {panel['MthCalDt'].dt.to_period('M').nunique():,}")
     print(f"MthRet mean/median       : {panel['MthRet'].mean():.4f} / {panel['MthRet'].median():.4f}")
 
-    out = config.DATA_DIR / "monthly_panel.parquet"
     panel.to_parquet(out, index=False)
     print(f"\nwrote {out}  ({out.stat().st_size / 1e6:.1f} MB)")
 

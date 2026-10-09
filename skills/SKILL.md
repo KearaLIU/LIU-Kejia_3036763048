@@ -10,29 +10,39 @@ CRSP common stocks. The pipeline turns the raw CRSP monthly stock file into the 
 decile portfolios, the J×K winner-minus-loser grid, the one-month-skip variant, and two
 size-conditioned extensions, then renders the five report figures.
 
+## One-command reproduction
+
+From the repository root, run:
+
+```bash
+python code/run_all.py
+```
+
+`run_all.py` executes the numbered scripts below in order and regenerates every table
+and figure. Step 01 is idempotent: if the panel already exists in `data/processed/`, it
+skips the raw build, so the pipeline runs with or without the licensed raw files.
+
 ## Prerequisites
 
-- The CRSP monthly stock file (`monthly_stock.csv`) from WRDS, placed at the location
-  pointed to by `RAW_DATA_DIR` in `config.py` (default `../raw data/`, overridable via
-  the `RAW_DATA_DIR` environment variable). No other source file is needed for the
-  tables and figures.
+- The CRSP monthly stock file (`monthly_stock.csv`) from WRDS. Original files are
+  licensed and are therefore **not** committed; the submission's `data/raw/` is a
+  documented placeholder (see `data/raw/README.md`). Point `RAW_DATA_DIR` in `config.py`
+  (or the `RAW_DATA_DIR` environment variable) at wherever the files live.
 - Python 3.14 with the pinned dependencies: `py -m pip install -r requirements.txt`.
 
-## Workflow
-
-Run from the repo root, in numbered order. Each script reads the raw/processed inputs
-and writes deterministic outputs to `data/` or `output/`.
+## Workflow (what `run_all.py` runs)
 
 | Step | Script | Purpose | Key output |
 |---|---|---|---|
-| 1 | `py code/01_build_panel.py` | Filter to NYSE/AMEX/Nasdaq common shares (`EQTY`, `NS`) with non-null returns | `data/monthly_panel.parquet` |
-| 2 | `py code/02_momentum.py` | Decile portfolios + J×K winner-minus-loser spread, Newey–West t-stats | `output/table1_deciles.csv`, `table2_jk.csv` |
-| 3 | `py code/03_skip.py` | Same engine with a one-month skip between formation and holding | `output/table3_deciles.csv`, `table3_jk.csv` |
-| 4 | `py code/04_size.py` | Equal-count size terciles × momentum | `output/table4_size_*.csv` |
-| 5 | `py code/05_size_nyse.py` | NYSE 30th/70th percentile size terciles × momentum | `output/table5_size_*.csv` |
-| 6 | `py code/06_figures.py` | Render the five report figures | `output/fig1..fig5.png` |
+| 1 | `code/01_build_panel.py` | Filter to NYSE/AMEX/Nasdaq common shares (`EQTY`, `NS`) with non-null returns | `data/processed/monthly_panel.parquet` |
+| 2 | `code/02_momentum.py` | Decile portfolios + J×K winner-minus-loser spread, Newey–West t-stats | `outputs/tables/table1_deciles.csv`, `table2_jk.csv` |
+| 3 | `code/03_skip.py` | Same engine with a one-month skip between formation and holding | `outputs/tables/table3_deciles.csv`, `table3_jk.csv` |
+| 4 | `code/04_size.py` | Equal-count size terciles × momentum | `outputs/tables/table4_size_*.csv` |
+| 5 | `code/05_size_nyse.py` | NYSE 30th/70th percentile size terciles × momentum | `outputs/tables/table5_size_*.csv` |
+| 6 | `code/06_figures.py` | Render the five report figures | `outputs/figures/fig1..fig5.png` |
 
-`py code/00_profile_data.py` is a read-only sanity check on the raw files (prints only).
+`code/00_profile_data.py` is a read-only sanity check on the raw files (prints only) and
+is not part of `run_all.py`.
 
 ## Method notes (preserve when reusing or extending)
 
@@ -54,8 +64,8 @@ and writes deterministic outputs to `data/` or `output/`.
 - Sample period, strategy parameters, and paths all live in `config.py`
   (`START_YEAR` / `END_YEAR`, `J_VALUES` / `K_VALUES` / `N_DECILES`, `RAW_DATA_DIR`).
 - To re-run on a new period, drop the new CRSP file at `RAW_DATA_DIR`, edit the sample
-  years in `config.py`, and re-run the numbered scripts; tables and figures regenerate
+  years in `config.py`, and run `python code/run_all.py`; tables and figures regenerate
   deterministically.
 - Known feature (not a bug): the winner-minus-loser payoff is dominated by occasional
   **momentum crashes** (e.g. Jan 2001 ≈ −78%), in which past losers rebound violently
-  after a market bottom — see report §6.
+  after a market bottom — see the report.

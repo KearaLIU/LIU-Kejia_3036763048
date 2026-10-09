@@ -7,9 +7,9 @@ With monthly data the paper's one-week lag is approximated by a one-month skip:
 rank on returns through month t, skip month t+1, hold months t+2 .. t+K+1.
 
 Outputs:
-  data/momentum_deciles_skip1.parquet  -- tidy decile series (skip=1)
-  output/table3_deciles.csv            -- J=6, K=6 decile means + t-stats (Table 3a)
-  output/table3_jk.csv                 -- J x K WML means + t-stats (Table 3b)
+  data/processed/momentum_deciles_skip1.parquet  -- tidy decile series (skip=1)
+  outputs/tables/table3_deciles.csv            -- J=6, K=6 decile means + t-stats (Table 3a)
+  outputs/tables/table3_jk.csv                 -- J x K WML means + t-stats (Table 3b)
 """
 from __future__ import annotations
 
@@ -42,20 +42,20 @@ def main() -> None:
     dec.to_parquet(config.DATA_DIR / "momentum_deciles_skip1.parquet", index=False)
 
     t1 = momentum.table1(dec)
-    t1.to_csv(config.OUTPUT_DIR / "table3_deciles.csv")
+    t1.to_csv(config.TABLES_DIR / "table3_deciles.csv")
     print("Table 3a (J=6, K=6, skip=1 month) - equal-weighted decile portfolios:\n")
     print(t1.round(3).to_string())
     print()
 
     t2 = momentum.table2(dec)
-    t2.to_csv(config.OUTPUT_DIR / "table3_jk.csv", index=False)
+    t2.to_csv(config.TABLES_DIR / "table3_jk.csv", index=False)
 
     pivot = t2.pivot(index="J", columns="K", values="p10_minus_p1_mean_pct")
     print("Table 3b - winner-minus-loser (P10-P1) mean monthly return, %, skip=1 month:\n")
     print(pivot.round(3).to_string())
-    print("\n(t-stats in output/table3_jk.csv)")
-    print(f"\nwrote data/momentum_deciles_skip1.parquet, "
-          f"output/table3_deciles.csv, output/table3_jk.csv")
+    print("\n(t-stats in outputs/tables/table3_jk.csv)")
+    print(f"\nwrote data/processed/momentum_deciles_skip1.parquet, "
+          f"outputs/tables/table3_deciles.csv, outputs/tables/table3_jk.csv")
 
 
 if __name__ == "__main__":

@@ -12,9 +12,9 @@ its results to NEW files (table5_*), leaving the Step 04 equal-count results
 (table4_*) intact so the two definitions can be compared.
 
 Outputs:
-  data/momentum_by_size_nyse.parquet  -- tidy (size, month, J, K, decile, ret)
-  output/table5_size_deciles.csv      -- J=6,K=6 WML by NYSE size group (Table 5a)
-  output/table5_size_jk.csv           -- J x K WML for Small and Large (Table 5b)
+  data/processed/momentum_by_size_nyse.parquet  -- tidy (size, month, J, K, decile, ret)
+  outputs/tables/table5_size_deciles.csv      -- J=6,K=6 WML by NYSE size group (Table 5a)
+  outputs/tables/table5_size_jk.csv           -- J x K WML for Small and Large (Table 5b)
 """
 from __future__ import annotations
 
@@ -150,7 +150,7 @@ def main() -> None:
             "n_months": len(wml),
         })
     t5a = pd.DataFrame(rows)
-    t5a.to_csv(config.OUTPUT_DIR / "table5_size_deciles.csv", index=False)
+    t5a.to_csv(config.TABLES_DIR / "table5_size_deciles.csv", index=False)
     print("\nTable 5a - winner-minus-loser (P10-P1) mean monthly return, %, "
           "J=6, K=6, by NYSE size breakpoint:\n")
     print(t5a.round(3).to_string(index=False))
@@ -164,7 +164,7 @@ def main() -> None:
         t["size"] = label
         frames.append(t)
     t5b = pd.concat(frames, ignore_index=True)
-    t5b.to_csv(config.OUTPUT_DIR / "table5_size_jk.csv", index=False)
+    t5b.to_csv(config.TABLES_DIR / "table5_size_jk.csv", index=False)
 
     for label in ("Small", "Large"):
         sub = t5b[t5b["size"] == label]
@@ -174,8 +174,8 @@ def main() -> None:
         print(pivot.round(3).to_string())
         print()
 
-    print("wrote data/momentum_by_size_nyse.parquet, "
-          "output/table5_size_deciles.csv, output/table5_size_jk.csv")
+    print("wrote data/processed/momentum_by_size_nyse.parquet, "
+          "outputs/tables/table5_size_deciles.csv, outputs/tables/table5_size_jk.csv")
 
 
 if __name__ == "__main__":

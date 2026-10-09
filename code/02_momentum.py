@@ -20,9 +20,9 @@ Data handling:
     is averaged into a holding-month portfolio only if it has a return that month.
 
 Outputs:
-  data/momentum_deciles.parquet  -- tidy decile return series (month, J, K, decile, ret)
-  output/table1_deciles.csv      -- J=6, K=6 decile means + t-stats (Table 1)
-  output/table2_jk.csv           -- J x K winner-minus-loser means + t-stats (Table 2)
+  data/processed/momentum_deciles.parquet  -- tidy decile return series (month, J, K, decile, ret)
+  outputs/tables/table1_deciles.csv      -- J=6, K=6 decile means + t-stats (Table 1)
+  outputs/tables/table2_jk.csv           -- J x K winner-minus-loser means + t-stats (Table 2)
 """
 from __future__ import annotations
 
@@ -205,19 +205,19 @@ def main() -> None:
     dec.to_parquet(config.DATA_DIR / "momentum_deciles.parquet", index=False)
 
     t1 = table1(dec)
-    t1.to_csv(config.OUTPUT_DIR / "table1_deciles.csv")
+    t1.to_csv(config.TABLES_DIR / "table1_deciles.csv")
     print("Table 1 (J=6, K=6) - equal-weighted decile portfolios, monthly:\n")
     print(t1.round(3).to_string())
     print()
 
     t2 = table2(dec)
-    t2.to_csv(config.OUTPUT_DIR / "table2_jk.csv", index=False)
+    t2.to_csv(config.TABLES_DIR / "table2_jk.csv", index=False)
 
     pivot = t2.pivot(index="J", columns="K", values="p10_minus_p1_mean_pct")
     print("Table 2 - winner-minus-loser (P10-P1) mean monthly return, %:\n")
     print(pivot.round(3).to_string())
-    print("\n(t-stats in output/table2_jk.csv)")
-    print(f"\nwrote data/momentum_deciles.parquet, output/table1_deciles.csv, output/table2_jk.csv")
+    print("\n(t-stats in outputs/tables/table2_jk.csv)")
+    print(f"\nwrote data/processed/momentum_deciles.parquet, outputs/tables/table1_deciles.csv, outputs/tables/table2_jk.csv")
 
 
 if __name__ == "__main__":
