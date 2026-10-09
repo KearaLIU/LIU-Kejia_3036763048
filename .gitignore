@@ -20,6 +20,9 @@ data/
 # --- Local inspection notebook (Chinese comments; not part of the submission) --
 test.ipynb
 
+# --- Local-only report→Word converter (never committed) ------------------------
+code/07_report_to_docx.py
+
 # --- OS / editor -------------------------------------------------------------
 .DS_Store
 Thumbs.db

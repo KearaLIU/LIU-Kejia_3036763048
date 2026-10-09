@@ -36,7 +36,8 @@ ECON6067/
 ├── code/                  # analysis scripts (run in numbered order)
 ├── data/                  # processed / intermediate data (gitignored, regenerated)
 ├── output/                # final tables & figures (tracked)
-└── report/                # empirical report (tracked)
+├── report/                # empirical report (tracked)
+└── .claude/skills/        # reusable Claude Code skill for this workflow
 ```
 
 ## Data prerequisites
@@ -91,6 +92,9 @@ py code/06_figures.py        # five report figures                -> output/fig1
 | `04_size.py` | Extension: splits stocks into equal-count size terciles and runs momentum within each (Table 4). |
 | `05_size_nyse.py` | Extension (revised): size terciles from NYSE 30th/70th market-cap percentiles (Table 5). |
 | `06_figures.py` | Renders the five report figures from the computed tables. |
+
+A reusable Claude Code skill that documents this same workflow — for re-running or
+extending the analysis on new data — lives in `.claude/skills/momentum-replication/`.
 
 ## The extension
 
