@@ -30,8 +30,7 @@ was used throughout the project.
   in January 2001 — which was traced to the momentum-crash mechanism of Daniel &
   Moskowitz (2016) rather than to a data error, and annotating the relevant figure.
 
-- **Writing.** Drafting the empirical report and the README, and converting the Markdown
-  report into an editable Word document. For the README in particular, the AI drafted the
+- **Writing.** Drafting the README. For the README in particular, the AI drafted the
   structure and text — what the project does, the method in brief, the results at a
   glance, the repository layout, the data and licensing notes, the environment, the
   "how to reproduce" instructions, the per-script descriptions, and the reusable-skill
