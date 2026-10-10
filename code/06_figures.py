@@ -5,12 +5,12 @@ the reference data-viz palette (see the project's design notes): categorical
 slots are fixed-order blue/orange, ordinal and sequential magnitudes use a
 single blue ramp (light -> dark), and ink/grid are the muted chart tokens.
 
-Figures (all written to outputs/figures/):
+Figures (all written to outputs/figures/, numbered in report order):
   fig1_decile_returns.png       -- decile portfolio means (Table 1), ordinal ramp
   fig2_jk_heatmap.png           -- winner-minus-loser J x K grid (Table 2)
-  fig3_cumulative_wml.png       -- cumulative P10-P1 wealth (J=6, K=6)
+  fig3_skip_comparison.png      -- deciles with/without one-month skip (Tables 1/3)
   fig4_size_momentum.png        -- WML by size, equal-count vs NYSE (Tables 4/5)
-  fig5_skip_comparison.png      -- deciles with/without one-month skip (Tables 1/3)
+  fig5_cumulative_wml.png       -- cumulative P10-P1 wealth (J=6, K=6)
 """
 from __future__ import annotations
 
@@ -131,36 +131,27 @@ def fig2(tables: Path, figs: Path):
     plt.close(fig)
 
 
-# --- Figure 3: cumulative winner-minus-loser ----------------------------------
-def fig3(data: Path, figs: Path):
-    dec = pd.read_parquet(data / "momentum_deciles.parquet")
-    sub = dec[(dec["J"] == 6) & (dec["K"] == 6)]
-    wide = sub.pivot(index="month", columns="decile", values="ret").sort_index()
-    wml = (wide[10] - wide[1]).dropna()
-    cum = (1.0 + wml).cumprod()
+# --- Figure 3: skip-month comparison (Table 1 vs Table 3) ---------------------
+def fig3(tables: Path, figs: Path):
+    t1 = pd.read_csv(tables / "table1_deciles.csv")
+    t3 = pd.read_csv(tables / "table3_deciles.csv")
+    d1 = _deciles_only(t1)
+    d3 = _deciles_only(t3)
+    x = np.arange(len(d1))
+    w = 0.4
 
     fig, ax = plt.subplots(figsize=(7.2, 4.4), dpi=200)
     style_ax(ax)
-    ax.plot(cum.index, cum.values, color=BLUE, linewidth=1.6)
-    ax.axhline(1.0, color=BASELINE, linewidth=0.8)
-
-    # Annotate the sharpest momentum-crash months (largest one-month WML drops):
-    # after a market bottom, past losers snap back and winner-minus-loser collapses.
-    for ts, r in wml.nsmallest(4).items():
-        ax.scatter([ts], [cum.loc[ts]], color=ORANGE, s=18, zorder=5)
-        ax.annotate(f"{pd.Timestamp(ts).strftime('%b %Y')}: {r * 100:.0f}%",
-                    (ts, cum.loc[ts]), textcoords="offset points", xytext=(4, -12),
-                    ha="left", va="top", fontsize=8, color=SEC_INK)
-
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Growth of $1 invested in P10$-$P1")
-    ax.set_title("Cumulative winner-minus-loser return (J=6, K=6)")
-    fig.text(0.99, 0.01,
-             "Dips mark momentum crashes: past losers rebound after market bottoms "
-             "(Jan 2001 dot-com, 2009 GFC).",
-             ha="right", va="bottom", fontsize=8, color=MUTED)
-    fig.tight_layout(rect=[0, 0.04, 1, 1])
-    fig.savefig(figs / "fig3_cumulative_wml.png")
+    ax.bar(x - w / 2, d1["mean_ret_pct"], w, color=BLUE, label="No skip")
+    ax.bar(x + w / 2, d3["mean_ret_pct"], w, color=ORANGE, label="One-month skip")
+    ax.axhline(0, color=BASELINE, linewidth=0.8)
+    ax.set_xticks(x, [f"P{d}" for d in d1["decile"]])
+    ax.set_xlabel("Decile")
+    ax.set_ylabel("Mean monthly return (%)")
+    ax.set_title("Momentum deciles with and without a one-month skip")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(figs / "fig3_skip_comparison.png")
     plt.close(fig)
 
 
@@ -195,27 +186,36 @@ def fig4(tables: Path, figs: Path):
     plt.close(fig)
 
 
-# --- Figure 5: skip-month comparison (Table 1 vs Table 3) ---------------------
-def fig5(tables: Path, figs: Path):
-    t1 = pd.read_csv(tables / "table1_deciles.csv")
-    t3 = pd.read_csv(tables / "table3_deciles.csv")
-    d1 = _deciles_only(t1)
-    d3 = _deciles_only(t3)
-    x = np.arange(len(d1))
-    w = 0.4
+# --- Figure 5: cumulative winner-minus-loser ----------------------------------
+def fig5(data: Path, figs: Path):
+    dec = pd.read_parquet(data / "momentum_deciles.parquet")
+    sub = dec[(dec["J"] == 6) & (dec["K"] == 6)]
+    wide = sub.pivot(index="month", columns="decile", values="ret").sort_index()
+    wml = (wide[10] - wide[1]).dropna()
+    cum = (1.0 + wml).cumprod()
 
     fig, ax = plt.subplots(figsize=(7.2, 4.4), dpi=200)
     style_ax(ax)
-    ax.bar(x - w / 2, d1["mean_ret_pct"], w, color=BLUE, label="No skip")
-    ax.bar(x + w / 2, d3["mean_ret_pct"], w, color=ORANGE, label="One-month skip")
-    ax.axhline(0, color=BASELINE, linewidth=0.8)
-    ax.set_xticks(x, [f"P{d}" for d in d1["decile"]])
-    ax.set_xlabel("Decile")
-    ax.set_ylabel("Mean monthly return (%)")
-    ax.set_title("Momentum deciles with and without a one-month skip")
-    ax.legend(frameon=False)
-    fig.tight_layout()
-    fig.savefig(figs / "fig5_skip_comparison.png")
+    ax.plot(cum.index, cum.values, color=BLUE, linewidth=1.6)
+    ax.axhline(1.0, color=BASELINE, linewidth=0.8)
+
+    # Annotate the sharpest momentum-crash months (largest one-month WML drops):
+    # after a market bottom, past losers snap back and winner-minus-loser collapses.
+    for ts, r in wml.nsmallest(4).items():
+        ax.scatter([ts], [cum.loc[ts]], color=ORANGE, s=18, zorder=5)
+        ax.annotate(f"{pd.Timestamp(ts).strftime('%b %Y')}: {r * 100:.0f}%",
+                    (ts, cum.loc[ts]), textcoords="offset points", xytext=(4, -12),
+                    ha="left", va="top", fontsize=8, color=SEC_INK)
+
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Growth of $1 invested in P10$-$P1")
+    ax.set_title("Cumulative winner-minus-loser return (J=6, K=6)")
+    fig.text(0.99, 0.01,
+             "Dips mark momentum crashes: past losers rebound after market bottoms "
+             "(Jan 2001 dot-com, 2009 GFC).",
+             ha="right", va="bottom", fontsize=8, color=MUTED)
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
+    fig.savefig(figs / "fig5_cumulative_wml.png")
     plt.close(fig)
 
 
@@ -226,9 +226,9 @@ def main() -> None:
     data = config.DATA_DIR
     fig1(tables, figs)
     fig2(tables, figs)
-    fig3(data, figs)
+    fig3(tables, figs)
     fig4(tables, figs)
-    fig5(tables, figs)
+    fig5(data, figs)
     print("wrote:")
     for p in sorted(figs.glob("fig*.png")):
         print(f"  {p.name}")
